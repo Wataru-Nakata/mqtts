@@ -1,0 +1,2 @@
+_target_: mqtts.preprocessor.dataset.parallel_audiobook_corpus.ParallelAudiobookCorpus
+root: /mnt/hdd/datasets/parallel_audiobook_corpus/

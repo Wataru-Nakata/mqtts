@@ -1,0 +1,24 @@
+audio:
+  sample_rate: ${sample_rate}
+defaults:
+  - preprocess_dataset: parallel_audiobook_dataset
+
+
+train_tar_sink:
+  _target_: webdataset.ShardWriter
+  pattern: "preprocessed_data/glob-train-%06d.tar.gz"
+val_tar_sink:
+  _target_: webdataset.ShardWriter
+  pattern: "preprocessed_data/glob-val-%06d.tar.gz"
+val_size: 3000
+
+
+ssl_models:
+  - 
+    - _target_: transformers.AutoModel.from_pretrained
+      pretrained_model_name_or_path: "facebook/wav2vec2-base"
+    - _target_: transformers.AutoFeatureExtractor.from_pretrained
+      pretrained_model_name_or_path: "facebook/wav2vec2-base"
+    - sr: 16_000
+      key: wav2vec2-base.pth
+      layer: 12
