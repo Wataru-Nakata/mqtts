@@ -11,14 +11,6 @@ val_tar_sink:
   _target_: webdataset.ShardWriter
   pattern: "preprocessed_data/glob-val-%06d.tar.gz"
 val_size: 3000
+speaker_dict_path: "preprocessed_data/speakers.json"
 
 
-ssl_models:
-  - 
-    - _target_: transformers.AutoModel.from_pretrained
-      pretrained_model_name_or_path: "facebook/wav2vec2-base"
-    - _target_: transformers.AutoFeatureExtractor.from_pretrained
-      pretrained_model_name_or_path: "facebook/wav2vec2-base"
-    - sr: 16_000
-      key: wav2vec2-base.pth
-      layer: 12

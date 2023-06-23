@@ -1,0 +1,6 @@
+train_dataset_path: preprocessed_data/glob-train-{000000..000022}.tar.gz
+val_dataset_path: preprocessed_data/glob-val-000000.tar.gz
+speaker_dict: preprocessed_data/speakers.json
+train_batch_size: 32
+val_batch_size: 8
+train_segment_size: 8192
