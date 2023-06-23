@@ -7,6 +7,7 @@ import numpy as np
 import webdataset
 import tqdm
 from torch.utils.data import DataLoader
+import json
 
 
 class Preprocessor:
@@ -22,6 +23,7 @@ class Preprocessor:
         self.cfg = cfg
         self.dataset = hydra.utils.instantiate(cfg.preprocess.preprocess_dataset)
         self.sampling_rate = self.cfg.sample_rate
+        self.speaker_set = set()
 
     @torch.no_grad()
     def process_utterance(
@@ -55,13 +57,14 @@ class Preprocessor:
             "book": book,
             "utt_id": utt_id
         }
+        self.speaker_set.add(speaker)
         return sample
 
     def build_from_path(self):
         pathlib.Path("/".join(self.cfg.preprocess.train_tar_sink.pattern.split("/")[:-1])).mkdir(exist_ok=True)
         train_sink = hydra.utils.instantiate(self.cfg.preprocess.train_tar_sink)
         val_sink = hydra.utils.instantiate(self.cfg.preprocess.val_tar_sink)
-        dataloader = DataLoader(self.dataset,batch_size=1)
+        dataloader = DataLoader(self.dataset,batch_size=1,shuffle=True)
         for idx, (wav_tensor,sr,wav_path,speaker,book,utt_id,clean_text,punc_text) in enumerate(tqdm.tqdm(dataloader)):
             sample = self.process_utterance(
                 wav_tensor[0],sr[0],wav_path[0],speaker[0],book[0],utt_id[0],clean_text[0],punc_text[0]
@@ -70,6 +73,9 @@ class Preprocessor:
                 train_sink.write(sample)
             else:
                 val_sink.write(sample)
+        with open(self.cfg.preprocess.speaker_dict_path,mode='w') as f:
+            speaker_dict = {x:idx for idx,x in enumerate(self.speaker_set)}
+            f.write(json.dumps(speaker_dict))
 
         train_sink.close()
         val_sink.close()
