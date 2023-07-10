@@ -1,55 +1,56 @@
-encoder:
-  resblock_kernel_sizes: [3,7,11]
-  upsample_rates: [8,8,2,2]
-  resblock: "1"
-  upsample_kernel_sizes: [16,16,4,4]
-  resblock_dilation_sizes: [[1,3,5],[1,3,5],[1,3,5]]
-generator:
-  resblock_kernel_sizes: ${..encoder.resblock_kernel_sizes}
-  upsample_rates: ${..encoder.upsample_rates}
-  upsample_initial_channel: 512
-  resblock: ${..encoder.resblock}
-  upsample_kernel_sizes: ${..encoder.upsample_kernel_sizes}
-  resblock_dilation_sizes: ${..encoder.resblock_dilation_sizes}
 quantizer:
-  n_code_groups: 4
-  n_codes: 160
-  hidden_dim: ${..generator.upsample_initial_channel}
-speaker_embedding:
-  n_speakers: 53
-  embedding_dim: ${..generator.upsample_initial_channel}
-  
+  encoder:
+    resblock_kernel_sizes: [3,7,11]
+    upsample_rates: [8,8,2,2]
+    resblock: "1"
+    upsample_kernel_sizes: [16,16,4,4]
+    resblock_dilation_sizes: [[1,3,5],[1,3,5],[1,3,5]]
+  generator:
+    resblock_kernel_sizes: ${..encoder.resblock_kernel_sizes}
+    upsample_rates: ${..encoder.upsample_rates}
+    upsample_initial_channel: 512
+    resblock: ${..encoder.resblock}
+    upsample_kernel_sizes: ${..encoder.upsample_kernel_sizes}
+    resblock_dilation_sizes: ${..encoder.resblock_dilation_sizes}
+  quantizer:
+    n_code_groups: 4
+    n_codes: 160
+    hidden_dim: ${..generator.upsample_initial_channel}
+  speaker_embedding:
+    n_speakers: 53
+    embedding_dim: ${..generator.upsample_initial_channel}
 
-mel:
-  n_fft: 1024
-  win_length: 800
-  hop_length: 200
-  f_min: 0
-  f_max: 8000
-  n_mels: 80
-  
-optim:
-  opt_g:
-    _target_: torch.optim.AdamW
-    lr: 0.0002
-    betas: [0.8,0.99]
-  opt_d:
-    _target_: torch.optim.AdamW
-    lr: 0.0002
-    betas: [0.8,0.99]
-  scheduler_g:
-    _target_: torch.optim.lr_scheduler.ExponentialLR
-    gamma: 0.999998
-  scheduler_d:
-    _target_: torch.optim.lr_scheduler.ExponentialLR
-    gamma: 0.999998
-adversarial_start_step: 0
 
-loss:
-  recons_coef: 45
-  fm_mpd_coef: 1
-  fm_msd_coef: 1
-  g_mpd_coef: 1
-  g_msd_coef: 1
-  quantizer_coef: 10
-logging_wav_samples: 10
+  mel:
+    n_fft: 1024
+    win_length: 800
+    hop_length: 200
+    f_min: 0
+    f_max: 8000
+    n_mels: 80
+    
+  optim:
+    opt_g:
+      _target_: torch.optim.AdamW
+      lr: 0.0002
+      betas: [0.8,0.99]
+    opt_d:
+      _target_: torch.optim.AdamW
+      lr: 0.0002
+      betas: [0.8,0.99]
+    scheduler_g:
+      _target_: torch.optim.lr_scheduler.ExponentialLR
+      gamma: 0.999998
+    scheduler_d:
+      _target_: torch.optim.lr_scheduler.ExponentialLR
+      gamma: 0.999998
+  adversarial_start_step: 0
+
+  loss:
+    recons_coef: 45
+    fm_mpd_coef: 1
+    fm_msd_coef: 1
+    g_mpd_coef: 1
+    g_msd_coef: 1
+    quantizer_coef: 10
+  logging_wav_samples: 10
