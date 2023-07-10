@@ -1,5 +1,5 @@
 [project]
-name = "mqtts"
+name = "mqtts-lightning"
 version = "0.1.0"
 description = "Add a short description here"
 authors = [
