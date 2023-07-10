@@ -14,25 +14,31 @@ from mqtts.model.quantizer import Encoder, Generator, MultiPeriodDiscriminator, 
 class QuantizerLightningModule(LightningModule):
     def __init__(self, cfg:DictConfig) -> None:
         super().__init__()
-        self.encoder = Encoder(cfg.model.encoder)
-        self.generator = Generator(cfg.model.generator)
-        self.quantizer = Quantizer(cfg.model.quantizer)
+        self.encoder = Encoder(cfg.model.quantizer.encoder)
+        self.generator = Generator(cfg.model.quantizer.generator)
+        self.quantizer = Quantizer(cfg.model.quantizer.quantizer)
         self.mpd = MultiPeriodDiscriminator()
         self.msd = MultiScaleDiscriminator()
         self.automatic_optimization=False
-        self.speaker_embedding = nn.Embedding(cfg.model.speaker_embedding.n_speakers,cfg.model.speaker_embedding.embedding_dim)
+        self.speaker_embedding = nn.Embedding(cfg.model.quantizer.speaker_embedding.n_speakers,cfg.model.quantizer.speaker_embedding.embedding_dim)
         self.mel_spec = torchaudio.transforms.MelSpectrogram(
             cfg.sample_rate,
-            cfg.model.mel.n_fft,
-            cfg.model.mel.win_length,
-            cfg.model.mel.hop_length,
-            cfg.model.mel.f_min,
-            cfg.model.mel.f_max,
-            n_mels=cfg.model.mel.n_mels,
+            cfg.model.quantizer.mel.n_fft,
+            cfg.model.quantizer.mel.win_length,
+            cfg.model.quantizer.mel.hop_length,
+            cfg.model.quantizer.mel.f_min,
+            cfg.model.quantizer.mel.f_max,
+            n_mels=cfg.model.quantizer.mel.n_mels,
         )
         self.reconstruction_loss = nn.MSELoss()
         self.cfg = cfg
         self.save_hyperparameters()
+    def forward(self,wav):
+        wav = wav.unsqueeze(1)
+        c = self.encoder(wav)
+        q,loss_q,c = self.quantizer(c)
+        return q,loss_q,c
+
     def training_step(self, batch, batch_idx):
         wav, speaker = batch["resampled_speech.pth"], batch['speaker']
         with torch.no_grad():
@@ -47,7 +53,7 @@ class QuantizerLightningModule(LightningModule):
 
         opt_g, opt_d = self.optimizers()
         sch_g, sch_d = self.lr_schedulers()
-        if self.global_step >= self.cfg.model.adversarial_start_step:
+        if self.global_step >= self.cfg.model.quantizer.adversarial_start_step:
             opt_d.zero_grad()
 
             # mpd
@@ -79,8 +85,8 @@ class QuantizerLightningModule(LightningModule):
         opt_g.zero_grad()
         predicted_mel = self.calc_logmelspec(wav_generator_out.squeeze(1))
         loss_recons = self.reconstruction_loss(wav_mel, predicted_mel)
-        loss_g = loss_recons * self.cfg.model.loss.recons_coef + loss_q * self.cfg.model.loss.quantizer_coef
-        if self.global_step >self.cfg.model.adversarial_start_step:
+        loss_g = loss_recons * self.cfg.model.quantizer.loss.recons_coef + loss_q * self.cfg.model.quantizer.loss.quantizer_coef
+        if self.global_step >self.cfg.model.quantizer.adversarial_start_step:
             (
                 mpd_out_real,
                 mpd_out_fake,
@@ -100,10 +106,10 @@ class QuantizerLightningModule(LightningModule):
 
             loss_g_mpd, losses_gen_f = generator_loss(mpd_out_fake)
             loss_g_msd, losses_gen_s = generator_loss(msd_out_fake)
-            loss_g += loss_fm_mpd * self.cfg.model.loss.fm_mpd_coef
-            loss_g += loss_fm_msd * self.cfg.model.loss.fm_msd_coef
-            loss_g += loss_g_mpd * self.cfg.model.loss.g_mpd_coef
-            loss_g += loss_g_msd * self.cfg.model.loss.g_msd_coef
+            loss_g += loss_fm_mpd * self.cfg.model.quantizer.loss.fm_mpd_coef
+            loss_g += loss_fm_msd * self.cfg.model.quantizer.loss.fm_msd_coef
+            loss_g += loss_g_mpd *  self.cfg.model.quantizer.loss.g_mpd_coef
+            loss_g += loss_g_msd *  self.cfg.model.quantizer.loss.g_msd_coef
             self.log("train/generator/loss_fm_mpd", loss_fm_mpd)
             self.log("train/generator/loss_fm_msd", loss_fm_msd)
             self.log("train/generator/loss_g_mpd", loss_g_mpd)
@@ -128,13 +134,14 @@ class QuantizerLightningModule(LightningModule):
         min_len = min(predicted_mel.size(2), wav_mel.size(2))
         loss_recons = self.reconstruction_loss(wav_mel[:,:,:min_len], predicted_mel[:,:,:min_len])
         if (
-            batch_idx < self.cfg.model.logging_wav_samples
+            batch_idx < self.cfg.model.quantizer.logging_wav_samples
             and self.global_rank == 0
             and self.local_rank == 0
         ):
             self.log_audio(
                 wav_generator_out[0]
                 .squeeze()[: wav_lens[0]]
+                .float()
                 .cpu()
                 .numpy()
                 .astype(np.float32),
@@ -142,7 +149,7 @@ class QuantizerLightningModule(LightningModule):
                 sampling_rate=self.cfg.sample_rate,
             )
             self.log_audio(
-                wav[0].squeeze()[: wav_lens[0]].cpu().numpy().astype(np.float32),
+                wav[0].squeeze()[: wav_lens[0]].cpu().float().numpy().astype(np.float32),
                 name=f"natural/{filename[0]}",
                 sampling_rate=self.cfg.sample_rate,
             )
@@ -153,24 +160,24 @@ class QuantizerLightningModule(LightningModule):
 
     def configure_optimizers(self):
         opt_g = hydra.utils.instantiate(
-            self.cfg.model.optim.opt_g, params=
+            self.cfg.model.quantizer.optim.opt_g, params=
             itertools.chain(self.generator.parameters(),
                             self.encoder.parameters(),
                             self.quantizer.parameters(),
                             self.speaker_embedding.parameters())
         )
         opt_d = hydra.utils.instantiate(
-            self.cfg.model.optim.opt_d,
+            self.cfg.model.quantizer.optim.opt_d,
             params=itertools.chain(
                 self.msd.parameters(),
                 self.mpd.parameters(),
             ),
         )
         scheduler_g = hydra.utils.instantiate(
-            self.cfg.model.optim.scheduler_g, optimizer=opt_g
+            self.cfg.model.quantizer.optim.scheduler_g, optimizer=opt_g
         )
         scheduler_d = hydra.utils.instantiate(
-            self.cfg.model.optim.scheduler_d, optimizer=opt_d
+            self.cfg.model.quantizer.optim.scheduler_d, optimizer=opt_d
         )
 
         return [opt_g, opt_d], [
@@ -198,8 +205,3 @@ class QuantizerLightningModule(LightningModule):
                         self.global_step,
                         sampling_rate,
                     )
-        
-
-
-
-

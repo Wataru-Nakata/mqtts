@@ -1,18 +1,21 @@
 audio:
   sample_rate: ${sample_rate}
 defaults:
-  - dataset: parallel_audiobook_dataset
+  - dataset: jvs_corpus
+quantizer_path: ???
+val_size: 1000
 
 
 train_tar_sink:
   _target_: webdataset.ShardWriter
-  pattern: "preprocessed_data/glob-train-%06d.tar.gz"
+  pattern: "preprocessed_data_jvs/glob-train-%06d.tar.gz"
 val_tar_sink:
   _target_: webdataset.ShardWriter
-  pattern: "preprocessed_data/glob-val-%06d.tar.gz"
-train_dataset_path: preprocessed_data/glob-train-{000000..000022}.tar.gz
-val_dataset_path: preprocessed_data/glob-val-000000.tar.gz
-speaker_dict: preprocessed_data/speakers.json
-train_batch_size: 32
-val_batch_size: 8
+  pattern: "preprocessed_data_jvs/glob-val-%06d.tar.gz"
+train_dataset_path: preprocessed_data_jvs/glob-train-{000000..000004}.tar.gz
+val_dataset_path: preprocessed_data_jvs/glob-val-000000.tar.gz
+speaker_dict: preprocessed_data_jvs/speakers.json
+vocab_path: preprocessed_data_jvs/vocab.txt
+train_batch_size: 16
+val_batch_size: 1
 train_segment_size: 8192

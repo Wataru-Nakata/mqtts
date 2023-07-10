@@ -3,7 +3,7 @@ quantizer:
     _target_: lightning.Trainer
     accelerator: "gpu"
     devices: [0]
-    precision: 32
+    precision: bf16
     check_val_every_n_epoch: 1
     max_epochs: 3300
 
@@ -12,4 +12,17 @@ quantizer:
   loggers:
     - _target_: lightning.pytorch.loggers.WandbLogger
       project: "mqtts_quantizer"
+token_decoder:
+  trainer:
+    _target_: lightning.Trainer
+    accelerator: "gpu"
+    devices: [0]
+    precision: bf16
+    check_val_every_n_epoch: 1
+    max_epochs: 3300
+
+
+  loggers:
+    - _target_: lightning.pytorch.loggers.WandbLogger
+      project: "mqtts_token_decoder"
 

@@ -1,0 +1,2 @@
+_target_: mqtts.preprocessor.dataset.jvs.JVSCorpus
+root: /mnt/hdd/datasets/jvs_ver1/

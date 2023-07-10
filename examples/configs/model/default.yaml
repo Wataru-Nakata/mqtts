@@ -17,7 +17,7 @@ quantizer:
     n_codes: 160
     hidden_dim: ${..generator.upsample_initial_channel}
   speaker_embedding:
-    n_speakers: 53
+    n_speakers: 101
     embedding_dim: ${..generator.upsample_initial_channel}
 
 
@@ -54,3 +54,35 @@ quantizer:
     g_msd_coef: 1
     quantizer_coef: 10
   logging_wav_samples: 10
+
+token_decoder:
+  decoder:
+    enc_nlayers: 4 
+    hidden_size: 768
+    nheads: 12
+    ffd_size: 3072
+    layer_norm_eps: 1e-5
+    dec_nlayers: 2
+    aligner_softmax_temp: 1.0
+    n_cluster_groups: 4
+    use_repetition_token: True
+    n_codes: 160
+    ar_hidden_size: 256
+    ar_ffd_size: 1024
+    ar_layer: 1
+    ar_nheads: 4
+    max_output_length: 1500
+    max_input_length: 2048
+    phone_context_window: 3
+    repetition_penalty: 1
+    use_repetition_gating: True
+    top_p: 0.7
+    length_penalty_max_length: 15000
+    length_penalty_max_prob: 0.95
+    min_top_k: 3
+    sampling_temperature: 1.0
+  label_smoothing: 0.0
+  optim:
+    _target_: torch.optim.AdamW
+    lr: 1e-4
+  logging_samples: 10

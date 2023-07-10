@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Python: run token decoder training",
+            "type": "python",
+            "request": "launch",
+            "program": "train_token_decoder.py",
+            "args": ["+data.quantizer_path=quantizer.ckpt"],
+            "cwd": "${workspaceFolder}/examples/",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: run quantizer training",
+            "type": "python",
+            "request": "launch",
+            "program": "train_quantizer.py",
+            "cwd": "${workspaceFolder}/examples/",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
