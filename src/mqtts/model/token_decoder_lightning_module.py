@@ -18,7 +18,7 @@ class TokenDecoderLightningModule(LightningModule):
 
         self.cross_entropy = CrossEntropyLoss(label_smoothing=cfg.model.token_decoder.label_smoothing)
         self.phone_embedding = Embedding(phoneset_size,cfg.model.token_decoder.decoder.hidden_size,padding_idx=0)
-        self.spkr_embedding = Embedding(101,cfg.model.token_decoder.decoder.hidden_size)
+        self.spkr_embedding = Embedding(cfg.model.token_decoder.n_speakers,cfg.model.token_decoder.decoder.hidden_size)
         quantizer = QuantizerLightningModule.load_from_checkpoint(cfg.data.quantizer_path,cfg=cfg)
         self.vocoder = quantizer.generator
         self.vocoder_spkr_embedding = quantizer.speaker_embedding

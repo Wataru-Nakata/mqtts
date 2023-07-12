@@ -17,7 +17,7 @@ quantizer:
     n_codes: 160
     hidden_dim: ${..generator.upsample_initial_channel}
   speaker_embedding:
-    n_speakers: 101
+    n_speakers: 2456
     embedding_dim: ${..generator.upsample_initial_channel}
 
 
@@ -56,6 +56,7 @@ quantizer:
   logging_wav_samples: 10
 
 token_decoder:
+  n_speakers: 2456
   decoder:
     enc_nlayers: 4 
     hidden_size: 768
