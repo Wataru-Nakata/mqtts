@@ -8,7 +8,7 @@ from lightning.pytorch import loggers
 from .modules.wildttstransformer import TTSDecoder
 from matplotlib import pyplot as plt
 
-from mqtts.model.quantizer_lightning_module import QuantizerLightningModule
+from mqtts_lightning.model.quantizer_lightning_module import QuantizerLightningModule
 
 class TokenDecoderLightningModule(LightningModule):
     def __init__(self, cfg:DictConfig,phoneset_size) -> None:

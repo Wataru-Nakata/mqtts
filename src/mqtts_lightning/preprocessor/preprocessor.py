@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 import json
 from phonemizer import phonemize
 
-from mqtts.model.quantizer_lightning_module import QuantizerLightningModule
+from mqtts_lightning.model.quantizer_lightning_module import QuantizerLightningModule
 
 
 class Preprocessor:

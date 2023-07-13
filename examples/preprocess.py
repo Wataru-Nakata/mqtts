@@ -2,7 +2,7 @@ import hydra
 from omegaconf import DictConfig
 from lightning.pytorch import seed_everything
 
-from mqtts.preprocessor.preprocessor import Preprocessor
+from mqtts_lightning.preprocessor.preprocessor import Preprocessor
 
 
 @hydra.main(version_base="1.3", config_name="config", config_path="./configs")

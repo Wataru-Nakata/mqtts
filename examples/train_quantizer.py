@@ -3,9 +3,9 @@ import hydra
 from omegaconf import DictConfig
 from lightning.pytorch import Trainer, seed_everything
 
-import mqtts
-from mqtts.data.quantizer_datamodule import MQTTSQuantizerDataModule
-from mqtts.model.quantizer_lightning_module import QuantizerLightningModule
+import mqtts_lightning
+from mqtts_lightning.data.quantizer_datamodule import MQTTSQuantizerDataModule
+from mqtts_lightning.model.quantizer_lightning_module import QuantizerLightningModule
 
 
 @hydra.main(version_base="1.3", config_name="config", config_path="./configs")

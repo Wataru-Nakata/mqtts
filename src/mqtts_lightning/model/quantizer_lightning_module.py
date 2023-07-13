@@ -8,7 +8,7 @@ import itertools
 import torchaudio
 import lightning.pytorch.loggers as loggers
 
-from mqtts.model.quantizer import Encoder, Generator, MultiPeriodDiscriminator, MultiScaleDiscriminator, Quantizer, generator_loss,discriminator_loss,feature_loss
+from mqtts_lightning.model.quantizer import Encoder, Generator, MultiPeriodDiscriminator, MultiScaleDiscriminator, Quantizer, generator_loss,discriminator_loss,feature_loss
 
 
 class QuantizerLightningModule(LightningModule):

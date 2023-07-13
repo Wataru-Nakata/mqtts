@@ -4,8 +4,8 @@ from omegaconf import DictConfig
 from lightning.pytorch import Trainer, seed_everything
 import torch
 
-from mqtts.data.datamodule import MQTTSDataModule
-from mqtts.model.token_decoder_lightning_module import TokenDecoderLightningModule
+from mqtts_lightning.data.datamodule import MQTTSDataModule
+from mqtts_lightning.model.token_decoder_lightning_module import TokenDecoderLightningModule
 
 
 @hydra.main(version_base="1.3", config_name="config", config_path="./configs")

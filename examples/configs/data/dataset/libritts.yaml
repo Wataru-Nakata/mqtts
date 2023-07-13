@@ -1,2 +1,2 @@
-_target_: mqtts.preprocessor.dataset.libritts.LibriTTSCorpus
+_target_: mqtts_lightning.preprocessor.dataset.libritts.LibriTTSCorpus
 root: /mnt/hdd/datasets/libritts-r/LibriTTS_R/
