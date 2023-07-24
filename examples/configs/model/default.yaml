@@ -36,7 +36,7 @@ quantizer:
       betas: [0.8,0.99]
     opt_d:
       _target_: torch.optim.AdamW
-      lr: 0.0002
+      lr: 0.0001
       betas: [0.8,0.99]
     scheduler_g:
       _target_: torch.optim.lr_scheduler.ExponentialLR

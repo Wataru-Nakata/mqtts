@@ -26,3 +26,8 @@ python train_token_decoder.py "data.quantizer_path+=path_to_quantizer_ckpt"
 # to synthesize
 TBA
 
+
+# Acknowledgemetns
+
+* Official implementation of MQTTS by the author 
+* Yuta Matsunaga for Debugging and testing the code

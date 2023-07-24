@@ -22,7 +22,6 @@ class MQTTSQuantizerDataModule(lightning.LightningDataModule):
 
         self.train_dataset,self.val_dataset = random_split(dataset,[0.9,0.1])
         self.speaker_dict = dataset.speaker_dict
-        print(self.speaker_dict)
 
     def train_dataloader(self):
         return DataLoader(

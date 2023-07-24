@@ -1,7 +1,7 @@
 audio:
   sample_rate: ${sample_rate}
 defaults:
-  - dataset: jvs_corpus
+  - dataset: libritts
 quantizer_path: ???
 val_size: 1000
 
@@ -12,10 +12,10 @@ train_tar_sink:
 val_tar_sink:
   _target_: webdataset.ShardWriter
   pattern: "preprocessed_data_jvs/glob-val-%06d.tar.gz"
-train_dataset_path: preprocessed_data_jvs/glob-train-{000000..000004}.tar.gz
+train_dataset_path: preprocessed_data_jvs/glob-train-{000000..000097}.tar.gz
 val_dataset_path: preprocessed_data_jvs/glob-val-000000.tar.gz
 speaker_dict: preprocessed_data_jvs/speakers.json
 vocab_path: preprocessed_data_jvs/vocab.txt
-train_batch_size: 16
+train_batch_size: 8
 val_batch_size: 1
 train_segment_size: 8192

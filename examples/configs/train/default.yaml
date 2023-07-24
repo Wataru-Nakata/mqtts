@@ -3,7 +3,7 @@ quantizer:
     _target_: lightning.Trainer
     accelerator: "gpu"
     devices: [0]
-    precision: bf16
+    precision: 32
     check_val_every_n_epoch: 1
     max_epochs: 3300
 
@@ -17,7 +17,7 @@ token_decoder:
     _target_: lightning.Trainer
     accelerator: "gpu"
     devices: [0]
-    precision: bf16
+    precision: 32 
     check_val_every_n_epoch: 1
     max_epochs: 3300
 

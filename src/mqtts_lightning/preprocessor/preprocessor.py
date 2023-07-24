@@ -28,10 +28,10 @@ class Preprocessor:
         self.cfg = cfg
         self.dataset = hydra.utils.instantiate(cfg.data.dataset)
         self.sampling_rate = self.cfg.sample_rate
-        self.speaker_set = set()
         self.vocab_list = list()
         self.vocab_list.append("<pad>")
         self.quantizer = QuantizerLightningModule.load_from_checkpoint(self.cfg.data.quantizer_path,cfg=cfg)
+        self.speaker_dict = self.dataset.speaker_dict
 
     @torch.no_grad()
     def process_utterance(
@@ -77,7 +77,6 @@ class Preprocessor:
             else:
                 sample[k] = v
 
-        self.speaker_set.add(speaker)
         return sample
 
     def build_from_path(self):
@@ -92,8 +91,7 @@ class Preprocessor:
             else:
                 val_sink.write(sample)
         with open(self.cfg.data.speaker_dict,mode='w') as f:
-            speaker_dict = {x:idx for idx,x in enumerate(self.speaker_set)}
-            f.write(json.dumps(speaker_dict))
+            f.write(json.dumps(self.speaker_dict))
         with open(self.cfg.data.vocab_path,mode='w') as f:
             f.writelines("\n".join(self.vocab_list))
 
