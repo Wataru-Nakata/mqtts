@@ -1,4 +1,3 @@
-
 import hydra
 from omegaconf import DictConfig
 from lightning.pytorch import Trainer, seed_everything
@@ -14,8 +13,8 @@ def main(cfg: DictConfig):
     lightning_module = QuantizerLightningModule(cfg)
     datamodule = MQTTSQuantizerDataModule(cfg)
     loggers = hydra.utils.instantiate(cfg.train.quantizer.loggers)
-    trainer = hydra.utils.instantiate(cfg.train.quantizer.trainer,logger=loggers)
-    trainer.fit(lightning_module,datamodule)
+    trainer = hydra.utils.instantiate(cfg.train.quantizer.trainer, logger=loggers)
+    trainer.fit(lightning_module, datamodule)
 
 
 if __name__ == "__main__":

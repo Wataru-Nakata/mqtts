@@ -1,2 +1,5 @@
 _target_: mqtts_lightning.preprocessor.dataset.libritts.LibriTTSCorpus
 root: /mnt/hdd/datasets/libritts-r/LibriTTS_R/
+exclude_subsets: 
+  - test-clean
+  - test-other

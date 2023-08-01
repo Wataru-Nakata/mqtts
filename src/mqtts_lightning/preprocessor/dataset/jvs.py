@@ -9,11 +9,13 @@ import string
 import pyopenjtalk
 import re
 
+
 def numeric_feature_by_regex(regex, s):
     match = re.search(regex, s)
     if match is None:
         return -50
     return int(match.group(1))
+
 
 def pp_symbols(labels, drop_unvoiced_vowels=True):
     """Extract phoneme + prosoody symbol sequence from input full-context labels
@@ -100,37 +102,42 @@ def pp_symbols(labels, drop_unvoiced_vowels=True):
     return PP
 
 
-
 class JVSCorpus(Dataset):
-    def __init__(self,root,exclude_speakers=[]) -> None:
+    def __init__(self, root, exclude_speakers=[]) -> None:
         super().__init__()
         self.root = Path(root)
-        self.speakers = [f.stem for f in self.root.glob("jvs*") if f.is_dir() and f.stem not in exclude_speakers]
+        self.speakers = [
+            f.stem
+            for f in self.root.glob("jvs*")
+            if f.is_dir() and f.stem not in exclude_speakers
+        ]
         self.clean_texts = dict()
-        self.wav_files  = []
+        self.wav_files = []
         for speaker in self.speakers:
-            transcript_files = (self.root/speaker).glob("**/transcripts_utf8.txt")
+            transcript_files = (self.root / speaker).glob("**/transcripts_utf8.txt")
             for transcript_file in transcript_files:
                 subset = transcript_file.parent.name
                 with transcript_file.open() as f:
                     lines = f.readlines()
                 for line in lines:
                     wav_name, text = line.strip().split(":")
-                    self.clean_texts[f"{speaker}/{subset}/{wav_name}"] =text
-                    wav_path = self.root/ Path(f"{speaker}/{subset}/wav24kHz16bit/{wav_name}.wav")
-                    if  wav_path.exists():
+                    self.clean_texts[f"{speaker}/{subset}/{wav_name}"] = text
+                    wav_path = self.root / Path(
+                        f"{speaker}/{subset}/wav24kHz16bit/{wav_name}.wav"
+                    )
+                    if wav_path.exists():
                         self.wav_files.append(wav_path)
-            
+
     def __getitem__(self, index):
         wav_path = self.wav_files[index]
-        wav_tensor,sr = torchaudio.load(wav_path)
+        wav_tensor, sr = torchaudio.load(wav_path)
         wav_path = wav_path.resolve()
         speaker = wav_path.parent.parent.parent.stem
         subset = wav_path.parent.parent.stem
         wav_name = wav_path.stem
 
         clean_text = self.clean_texts[f"{speaker}/{subset}/{wav_name}"]
-        basename= f"{subset}_{speaker}_{wav_name}"
+        basename = f"{subset}_{speaker}_{wav_name}"
         output = {
             "wav_tensor": wav_tensor,
             "sr": sr,
@@ -138,22 +145,22 @@ class JVSCorpus(Dataset):
             "speaker": speaker,
             "clean_text": clean_text,
             "basename": basename
-        #    "phones": phones
+            #    "phones": phones
         }
 
         return output
+
     def __len__(self):
         return len(self.wav_files)
-    
+
     @property
     def speaker_dict(self):
         speakers = set()
         for wav_path in self.wav_files:
             speakers.add(wav_path.parent.parent.parent.stem)
-        speaker_dict = {x:idx for idx,x in enumerate(speakers)}
+        speaker_dict = {x: idx for idx, x in enumerate(speakers)}
         return speaker_dict
-    def phonemize(self,lines):
+
+    def phonemize(self, lines):
         full_context = pyopenjtalk.extract_fullcontext(lines[0])
         return [pp_symbols(full_context)]
-
-

@@ -1,7 +1,7 @@
 import webdataset as wds
 import lightning
 from omegaconf import DictConfig
-from torch.utils.data import DataLoader,random_split
+from torch.utils.data import DataLoader, random_split
 from torch.nn.utils.rnn import pad_sequence
 from pathlib import Path
 import torch
@@ -11,6 +11,7 @@ import math
 import random
 import torchaudio
 import hydra
+
 
 class MQTTSQuantizerDataModule(lightning.LightningDataModule):
     def __init__(self, cfg: DictConfig) -> None:
@@ -23,11 +24,10 @@ class MQTTSQuantizerDataModule(lightning.LightningDataModule):
             self.xvector_sr = self.cfg.data.xvector.sr
             self.xvector_extract_secs = self.cfg.data.xvector.extract_secs
 
-
     def setup(self, stage: str):
         dataset = hydra.utils.instantiate(self.cfg.data.dataset)
 
-        self.train_dataset,self.val_dataset = random_split(dataset,[0.9,0.1])
+        self.train_dataset, self.val_dataset = random_split(dataset, [0.9, 0.1])
         self.speaker_dict = dataset.speaker_dict
 
     def train_dataloader(self):
@@ -44,22 +44,21 @@ class MQTTSQuantizerDataModule(lightning.LightningDataModule):
         return DataLoader(
             self.val_dataset,
             batch_size=self.cfg.data.val_batch_size,
-            collate_fn=lambda batch: self.collate_fn(
-                batch, -1
-            ),
+            collate_fn=lambda batch: self.collate_fn(batch, -1),
             num_workers=16,
         )
-
 
     @torch.no_grad()
     def collate_fn(self, batch, segment_size: int = -1):
         for i in range(len(batch)):
             sample = batch[i]
-            if sample['sr'] != self.cfg.sample_rate:
-                resampled = torchaudio.functional.resample(sample['wav_tensor'],sample['sr'],self.cfg.sample_rate)
-                batch[i]['resampled_speech.pth'] = resampled.squeeze()
+            if sample["sr"] != self.cfg.sample_rate:
+                resampled = torchaudio.functional.resample(
+                    sample["wav_tensor"], sample["sr"], self.cfg.sample_rate
+                )
+                batch[i]["resampled_speech.pth"] = resampled.squeeze()
             else:
-                batch[i]['resampled_speech.pth'] = sample['wav_tensor'].squeeze()
+                batch[i]["resampled_speech.pth"] = sample["wav_tensor"].squeeze()
         outputs = dict()
 
         if segment_size != -1:
@@ -67,15 +66,11 @@ class MQTTSQuantizerDataModule(lightning.LightningDataModule):
             for sample in batch:
                 wav = sample["resampled_speech.pth"]
                 feature_len = wav.size(0)
-                if feature_len > (segment_size+1):
-                    feature_start = random.randint(
-                        0, feature_len - segment_size - 1
-                    )
+                if feature_len > (segment_size + 1):
+                    feature_start = random.randint(0, feature_len - segment_size - 1)
                     feature_end = segment_size + feature_start
                     cropped_speeches.append(
-                        wav.squeeze()[
-                            int(feature_start) : int(feature_end)
-                        ]
+                        wav.squeeze()[int(feature_start) : int(feature_end)]
                     )
                 else:
                     cropped_speeches.append(wav.squeeze())
@@ -89,15 +84,21 @@ class MQTTSQuantizerDataModule(lightning.LightningDataModule):
         if self.use_xvector:
             resampled_for_xvector = []
             for sample in batch:
-                resampled_for_xvector.append(torchaudio.functional.resample(sample['wav_tensor'],sample['sr'],self.xvector_sr).squeeze()[:int(self.xvector_sr*self.xvector_extract_secs)])
-            extracted_speeches = pad_sequence(resampled_for_xvector,batch_first=True)
+                resampled_for_xvector.append(
+                    torchaudio.functional.resample(
+                        sample["wav_tensor"], sample["sr"], self.xvector_sr
+                    ).squeeze()[: int(self.xvector_sr * self.xvector_extract_secs)]
+                )
+            extracted_speeches = pad_sequence(resampled_for_xvector, batch_first=True)
             embeddings = self.xvector_model.encode_batch(extracted_speeches)
-            outputs['xvector'] = embeddings.view(-1,512)
-        
+            outputs["xvector"] = embeddings.view(-1, 512)
+
         outputs["wav_lens"] = torch.tensor(
             [b["resampled_speech.pth"].size(0) for b in batch]
         )
 
         outputs["filenames"] = [b["basename"] for b in batch]
-        outputs["speaker"] = torch.tensor([self.speaker_dict[b["speaker"]] for b in batch])
+        outputs["speaker"] = torch.tensor(
+            [self.speaker_dict[b["speaker"]] for b in batch]
+        )
         return outputs
