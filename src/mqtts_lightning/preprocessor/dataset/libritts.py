@@ -21,9 +21,8 @@ class LibriTTSCorpus(Dataset):
             self.wav_files = [
                 wav_file
                 for wav_file in self.wav_files
-                if exclude_subset not in list(map(str, wav_file.parents))
+                if exclude_subset not in str(wav_file)
             ]
-        print(len(self.wav_files))
         self.wav_files = [
             x
             for x in self.wav_files
