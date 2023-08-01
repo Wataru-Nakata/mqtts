@@ -16,6 +16,13 @@ class MQTTSQuantizerDataModule(lightning.LightningDataModule):
     def __init__(self, cfg: DictConfig) -> None:
         super().__init__()
         self.cfg = cfg
+        self.use_xvector = cfg.data.xvector.use_xvector
+        if self.use_xvector:
+            self.xvector_model = hydra.utils.instantiate(self.cfg.data.xvector.model)
+            self.xvector_model.eval()
+            self.xvector_sr = self.cfg.data.xvector.sr
+            self.xvector_extract_secs = self.cfg.data.xvector.extract_secs
+
 
     def setup(self, stage: str):
         dataset = hydra.utils.instantiate(self.cfg.data.dataset)
@@ -79,8 +86,13 @@ class MQTTSQuantizerDataModule(lightning.LightningDataModule):
             outputs["resampled_speech.pth"] = pad_sequence(
                 [b["resampled_speech.pth"].squeeze() for b in batch], batch_first=True
             )
-
-        
+        if self.use_xvector:
+            resampled_for_xvector = []
+            for sample in batch:
+                resampled_for_xvector.append(torchaudio.functional.resample(sample['wav_tensor'],sample['sr'],self.xvector_sr).squeeze()[:int(self.xvector_sr*self.xvector_extract_secs)])
+            extracted_speeches = pad_sequence(resampled_for_xvector,batch_first=True)
+            embeddings = self.xvector_model.encode_batch(extracted_speeches)
+            outputs['xvector'] = embeddings.view(-1,512)
         
         outputs["wav_lens"] = torch.tensor(
             [b["resampled_speech.pth"].size(0) for b in batch]

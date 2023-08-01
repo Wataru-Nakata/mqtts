@@ -4,6 +4,14 @@ defaults:
   - dataset: libritts
 quantizer_path: ???
 val_size: 1000
+xvector:
+  use_xvector: True
+  model:
+    _target_: speechbrain.pretrained.EncoderClassifier.from_hparams
+    source: "speechbrain/spkrec-xvect-voxceleb"
+    savedir: "pretrained_models/spkrec-xvect-voxceleb"
+  sr: 16_000
+  extract_secs: 5.0
 
 
 train_tar_sink:

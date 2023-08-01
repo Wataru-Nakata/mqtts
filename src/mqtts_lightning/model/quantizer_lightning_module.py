@@ -20,7 +20,6 @@ class QuantizerLightningModule(LightningModule):
         self.mpd = MultiPeriodDiscriminator()
         self.msd = MultiScaleDiscriminator()
         self.automatic_optimization=False
-        self.speaker_embedding = nn.Embedding(cfg.model.quantizer.speaker_embedding.n_speakers,cfg.model.quantizer.speaker_embedding.embedding_dim)
         self.mel_spec = torchaudio.transforms.MelSpectrogram(
             cfg.sample_rate,
             cfg.model.quantizer.mel.n_fft,
@@ -30,6 +29,9 @@ class QuantizerLightningModule(LightningModule):
             cfg.model.quantizer.mel.f_max,
             n_mels=cfg.model.quantizer.mel.n_mels,
         )
+        self.use_xvector=cfg.data.xvector.use_xvector
+        if not self.use_xvector:
+            self.speaker_embedding = nn.Embedding(cfg.model.quantizer.speaker_embedding.n_speakers,cfg.model.quantizer.speaker_embedding.embedding_dim)
         self.reconstruction_loss = nn.MSELoss()
         self.cfg = cfg
         self.save_hyperparameters()
@@ -48,7 +50,10 @@ class QuantizerLightningModule(LightningModule):
         c = self.encoder(wav)
 
         q, loss_q, c = self.quantizer(c)
-        speaker = self.speaker_embedding(speaker)
+        if not self.use_xvector:
+            speaker = self.speaker_embedding(speaker)
+        else:
+            speaker = batch['xvector']
         wav_generator_out = self.generator(q,speaker)
 
         opt_g, opt_d = self.optimizers()
@@ -128,7 +133,10 @@ class QuantizerLightningModule(LightningModule):
         c = self.encoder(wav.unsqueeze(1))
 
         q, loss_q, c = self.quantizer(c)
-        speaker = self.speaker_embedding(speaker)
+        if not self.use_xvector:
+            speaker = self.speaker_embedding(speaker)
+        else:
+            speaker = batch['xvector']
         wav_generator_out = self.generator(q,speaker)
         predicted_mel = self.calc_logmelspec(wav_generator_out.squeeze(1))
         min_len = min(predicted_mel.size(2), wav_mel.size(2))
@@ -159,13 +167,22 @@ class QuantizerLightningModule(LightningModule):
 
 
     def configure_optimizers(self):
-        opt_g = hydra.utils.instantiate(
-            self.cfg.model.quantizer.optim.opt_g, params=
-            itertools.chain(self.generator.parameters(),
-                            self.encoder.parameters(),
-                            self.quantizer.parameters(),
-                            self.speaker_embedding.parameters())
-        )
+        if self.use_xvector:
+            opt_g = hydra.utils.instantiate(
+                self.cfg.model.quantizer.optim.opt_g, params=
+                itertools.chain(self.generator.parameters(),
+                                self.encoder.parameters(),
+                                self.quantizer.parameters()
+                                )
+            )
+        else:
+            opt_g = hydra.utils.instantiate(
+                self.cfg.model.quantizer.optim.opt_g, params=
+                itertools.chain(self.generator.parameters(),
+                                self.encoder.parameters(),
+                                self.quantizer.parameters(),
+                                self.speaker_embedding.parameters())
+            )
         opt_d = hydra.utils.instantiate(
             self.cfg.model.quantizer.optim.opt_d,
             params=itertools.chain(
