@@ -1,6 +1,7 @@
 import hydra
 from omegaconf import DictConfig
 from lightning.pytorch import Trainer, seed_everything
+import torch
 
 import mqtts_lightning
 from mqtts_lightning.data.quantizer_datamodule import MQTTSQuantizerDataModule

@@ -10,4 +10,4 @@ module load cudnn/8.9/8.9.2
 module load nccl/2.18/2.18.1-1
 source venv/bin/activate
 cd examples
-python3 train_quantizer.py
+python3 train_quantizer.py data.train_batch_size=128 data.dataset.root=/scratch/acc12576tt/libritts-r/LibriTTS_R
